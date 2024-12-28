@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Getter
 public class ClientInfoDto {
-    private final Long id;
-    private final String mail;
-    private final BigDecimal balance;
-    private final String address;
+    private  Long id;
+    private  String mail;
+    private  BigDecimal balance;
+    private  String address;
 }

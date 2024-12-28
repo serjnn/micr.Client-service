@@ -1,7 +1,7 @@
 spring:
   r2dbc:
     driver-class-name: org.postgresql.Driver
-    url: r2dbc:postgresql://localhost:5432/chatclientdb
+    url: r2dbc:postgresql://localhost:5432/clientflux
     username: postgres
     password: Vaifery111
 
@@ -15,3 +15,10 @@ server:
 variables:
   SECRET_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
+logging:
+  level:
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: WARN
+    io.r2dbc.spi: ERROR
+    org.springframework.data.r2dbc: ERROR
+    org.springframework.r2dbc: ERROR

@@ -36,7 +36,9 @@ public class SecurityConfiguration {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
 
-                        .anyExchange().permitAll()
+                        .pathMatchers("/api/v1/auth", "/api/v1/register").permitAll()
+                        .anyExchange().hasRole("client")
+
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authenticationManager(authenticationManager())

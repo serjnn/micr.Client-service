@@ -11,16 +11,14 @@ import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
-
 public class ClientDetailService implements ReactiveUserDetailsService {
 
     private final ClientRepository clientRepository;
 
-
     @Override
     public Mono<UserDetails> findByUsername(String mail) {
         return clientRepository.findByMail(mail)
-                .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with mail: " + mail)))
+                .switchIfEmpty(Mono.error(new UsernameNotFoundException("")))
                 .map(client -> User.builder()
                         .username(client.getMail())
                         .password(client.getPassword())

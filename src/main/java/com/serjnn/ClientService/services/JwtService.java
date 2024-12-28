@@ -22,9 +22,8 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
-
     @Value("${variables.SECRET_KEY}")
-    private  String SECRET_KEY;
+    private String SECRET_KEY;
 
     public String extractUsername(String token) {
 
@@ -99,6 +98,5 @@ public class JwtService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
 
 }

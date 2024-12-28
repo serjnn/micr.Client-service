@@ -10,22 +10,16 @@ import java.math.BigDecimal;
 
 
 @NoArgsConstructor
-
 @Getter
 @Setter
 @Table(name = "client")
 public class Client {
     @Id
     private Long id;
-
     private String mail;
-
     private String password;
-
     private String role;
-
     private String address;
-
     private BigDecimal balance = new BigDecimal(0);
 
     public Client(String mail, String password) {
