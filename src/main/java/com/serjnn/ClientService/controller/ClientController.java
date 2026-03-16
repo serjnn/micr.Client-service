@@ -1,6 +1,5 @@
 package com.serjnn.ClientService.controller;
 
-
 import com.serjnn.ClientService.dtos.AuthRequest;
 import com.serjnn.ClientService.dtos.ClientInfoDto;
 import com.serjnn.ClientService.dtos.OrderDTO;
@@ -11,11 +10,12 @@ import com.serjnn.ClientService.services.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 
@@ -24,100 +24,74 @@ import java.math.BigDecimal;
 @RequestMapping("/api/v1")
 public class ClientController {
     private final ClientService clientService;
-    private final ReactiveAuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
     private final ClientDetailService clientDetailService;
     private final JwtService jwtService;
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 
-
     @PostMapping("/register")
-    ResponseEntity<?> reg(@RequestBody RegRequest regRequest) {
-
-        if (regRequest.getMail() == null || regRequest.getPassword() == null) {
-            return new ResponseEntity<>("Некоторые обязательные поля отсутствуют", HttpStatus.BAD_REQUEST);
+    public void reg(@RequestBody RegRequest regRequest) {
+        if (regRequest.mail() == null || regRequest.password() == null) {
+            throw new IllegalArgumentException("Некоторые обязательные поля отсутствуют");
         }
-        if (!regRequest.getMail().matches(EMAIL_REGEX)) {
-            return new ResponseEntity<>("Mail does not math the regex", HttpStatus.BAD_REQUEST);
+        if (!regRequest.mail().matches(EMAIL_REGEX)) {
+            throw new IllegalArgumentException("Mail does not match the regex");
         }
-        return ResponseEntity.ok(clientService.register(regRequest));
-
-
+        clientService.register(regRequest);
     }
-
-    @GetMapping("/secured")
-    Mono<Object> som() {
-        return Mono.empty();
-    }
-
 
     @PostMapping("/auth")
-    Mono<ResponseEntity<String>> auth(@RequestBody AuthRequest authRequest) {
-        return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getMail(),
-                        authRequest.getPassword()))
-                .flatMap(authentication -> clientDetailService.findByUsername(authRequest.getMail()))
-                .flatMap(userDetails -> {
-                    if (userDetails == null) {
-                        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials"));
-                    }
-                    String token = jwtService.generateToken(userDetails);
-                    return Mono.just(ResponseEntity.ok(token));
-                })
-                .onErrorResume(BadCredentialsException.class, e -> Mono.just(ResponseEntity.badRequest().build()));
+    public ResponseEntity<String> auth(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.mail(), authRequest.password())
+            );
+            UserDetails userDetails = clientDetailService.loadUserByUsername(authRequest.mail());
+            String token = jwtService.generateToken(userDetails);
+            return ResponseEntity.ok(token);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
-
 
     @PostMapping("/validate")
-    Mono<ResponseEntity<?>> validateToken(@RequestHeader("Authorization") String token) {
-        String extractedToken = token.substring(7);
-
-
-        String username = jwtService.extractUsername(token);
-
-        return clientDetailService.findByUsername(username)
-                .flatMap(userDetails -> {
-                    if (userDetails == null) {
-                        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token"));
-                    }
-                    boolean isValid = jwtService.isTokenValid(extractedToken, userDetails);
-                    if (isValid) {
-                        return Mono.just(ResponseEntity.ok().build());
-                    } else {
-                        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token"));
-                    }
-                })
-                .onErrorReturn(Exception.class, ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token validation failed"));
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
+        try {
+            String extractedToken = token.substring(7);
+            String username = jwtService.extractUsername(extractedToken);
+            UserDetails userDetails = clientDetailService.loadUserByUsername(username);
+            if (jwtService.isTokenValid(extractedToken, userDetails)) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token validation failed");
+        }
     }
 
-
     @GetMapping("/myInfo")
-    Mono<ClientInfoDto> clientInfo() {
+    public ClientInfoDto clientInfo() {
         return clientService.getClientInfo();
     }
 
     @GetMapping("/addBalance/{clientId}/{amount}")
-    Mono<Void> addBalance(@PathVariable Long clientId, @PathVariable BigDecimal amount) {
-        return clientService.addBalance(clientId, amount);
-
+    public void addBalance(@PathVariable Long clientId, @PathVariable BigDecimal amount) {
+        clientService.addBalance(clientId, amount);
     }
 
     @PostMapping("/changeAddress")
-    Mono<Void> changeAddress(@RequestParam String address) {
-        return clientService.setAddress(address);
-
+    public void changeAddress(@RequestParam String address) {
+        clientService.setAddress(address);
     }
 
     @PostMapping("/restore")
-    Mono<Void> restore(@RequestBody OrderDTO orderDTO) {
-        return clientService.addBalance(orderDTO.getClientID(), orderDTO.getTotalSum());
-
+    public void restore(@RequestBody OrderDTO orderDTO) {
+        clientService.addBalance(orderDTO.clientID(), orderDTO.totalSum());
     }
 
     @PostMapping("/deduct")
-    Mono<Void> deduct(@RequestBody OrderDTO orderDTO) {
-        System.out.println(orderDTO);
-        return clientService.deductMoney(orderDTO.getClientID(), orderDTO.getTotalSum());
-
+    public void deduct(@RequestBody OrderDTO orderDTO) {
+        clientService.deductMoney(orderDTO.clientID(), orderDTO.totalSum());
     }
-
-
 }
