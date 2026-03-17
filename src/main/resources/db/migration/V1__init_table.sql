@@ -1,0 +1,8 @@
+CREATE TABLE client (
+    id SERIAL PRIMARY KEY,
+    mail VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    address VARCHAR(255),
+    balance DECIMAL(19, 2) DEFAULT 0.00
+);
