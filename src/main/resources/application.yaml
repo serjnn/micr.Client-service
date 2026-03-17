@@ -1,9 +1,9 @@
 spring:
-  r2dbc:
+  datasource:
     driver-class-name: org.postgresql.Driver
-    url: r2dbc:postgresql://localhost:5432/chatclientdb
-    username: postgres
-    password: Vaifery111
+    url: jdbc:postgresql://localhost:5432/micr-synch
+    username: qwe
+    password: qwe
 
 
   application:
@@ -14,4 +14,3 @@ server:
 
 variables:
   SECRET_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-
