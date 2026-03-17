@@ -6,7 +6,6 @@ import com.serjnn.ClientService.services.ClientService;
 import com.serjnn.ClientService.services.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @Tag(name = "Client API", description = "Operations related to clients")
 public class ClientController {
@@ -28,6 +26,16 @@ public class ClientController {
     private final ClientDetailService clientDetailService;
     private final JwtService jwtService;
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+
+    public ClientController(ClientService clientService, 
+                            AuthenticationManager authenticationManager, 
+                            ClientDetailService clientDetailService, 
+                            JwtService jwtService) {
+        this.clientService = clientService;
+        this.authenticationManager = authenticationManager;
+        this.clientDetailService = clientDetailService;
+        this.jwtService = jwtService;
+    }
 
     @PostMapping("/clients/register")
     @Operation(summary = "Register a new client")

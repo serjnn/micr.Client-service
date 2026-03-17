@@ -1,7 +1,6 @@
 package com.serjnn.ClientService.services;
 
 import com.serjnn.ClientService.repo.ClientRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -9,10 +8,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class ClientDetailService implements UserDetailsService {
 
     private final ClientRepository clientRepository;
+
+    public ClientDetailService(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String mail) throws UsernameNotFoundException {

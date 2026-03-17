@@ -4,7 +4,6 @@ import com.serjnn.ClientService.dtos.ClientInfoDto;
 import com.serjnn.ClientService.dtos.RegRequest;
 import com.serjnn.ClientService.models.Client;
 import com.serjnn.ClientService.repo.ClientRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,10 +13,14 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 
 @Service
-@RequiredArgsConstructor
 public class ClientService {
     private final ClientRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public ClientService(ClientRepository clientRepository, PasswordEncoder passwordEncoder) {
+        this.clientRepository = clientRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public Client findById(Long id) {
         return clientRepository.findById(id)

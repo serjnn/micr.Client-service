@@ -1,7 +1,6 @@
 package com.serjnn.ClientService.repo;
 
 import com.serjnn.ClientService.models.Client;
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -9,9 +8,12 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-@RequiredArgsConstructor
 public class ClientRepository {
     private final JdbcTemplate jdbcTemplate;
+
+    public ClientRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     private final RowMapper<Client> rowMapper = (rs, rowNum) -> new Client(
             rs.getLong("id"),
