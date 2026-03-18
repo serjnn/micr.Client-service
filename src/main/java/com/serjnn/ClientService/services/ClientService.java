@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -49,16 +50,7 @@ public class ClientService {
     }
 
     public void addBalance(Long clientID, BigDecimal balance) {
-        Client client = findById(clientID);
-        Client updatedClient = new Client(
-                client.id(),
-                client.mail(),
-                client.password(),
-                client.role(),
-                client.address(),
-                client.balance().add(balance)
-        );
-        save(updatedClient);
+        clientRepository.updateBalance(clientID, balance);
     }
 
     public void setAddress(String address) {
@@ -74,20 +66,16 @@ public class ClientService {
         save(updatedClient);
     }
 
+    @Transactional
     public void deductMoney(Long clientID, BigDecimal amount) {
-        Client client = findById(clientID);
-        if (client.balance().compareTo(amount) < 0) {
+        try {
+            int updated = clientRepository.updateBalance(clientID, amount.negate());
+            if (updated == 0) {
+                throw new RuntimeException("Client not found");
+            }
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
             throw new RuntimeException("Insufficient funds");
         }
-        Client updatedClient = new Client(
-                client.id(),
-                client.mail(),
-                client.password(),
-                client.role(),
-                client.address(),
-                client.balance().subtract(amount)
-        );
-        save(updatedClient);
     }
 
     public ClientInfoDto getClientInfo() {

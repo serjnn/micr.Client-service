@@ -43,4 +43,9 @@ public class ClientRepository {
             jdbcTemplate.update(sql, client.mail(), client.password(), client.role(), client.address(), client.balance(), client.id());
         }
     }
+
+    public int updateBalance(Long id, java.math.BigDecimal amount) {
+        String sql = "UPDATE client SET balance = balance + ? WHERE id = ?";
+        return jdbcTemplate.update(sql, amount, id);
+    }
 }
