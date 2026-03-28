@@ -1,17 +1,13 @@
 package com.serjnn.ClientService.controller;
 
 import com.serjnn.ClientService.dtos.*;
-import com.serjnn.ClientService.services.ClientDetailService;
+import com.serjnn.ClientService.services.AuthService;
 import com.serjnn.ClientService.services.ClientService;
-import com.serjnn.ClientService.services.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -22,42 +18,29 @@ import java.math.BigDecimal;
 public class ClientController {
 
     private final ClientService clientService;
-    private final AuthenticationManager authenticationManager;
-    private final ClientDetailService clientDetailService;
-    private final JwtService jwtService;
-    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+    private final AuthService authService;
 
-    public ClientController(ClientService clientService, 
-                            AuthenticationManager authenticationManager, 
-                            ClientDetailService clientDetailService, 
-                            JwtService jwtService) {
+    public ClientController(ClientService clientService, AuthService authService) {
         this.clientService = clientService;
-        this.authenticationManager = authenticationManager;
-        this.clientDetailService = clientDetailService;
-        this.jwtService = jwtService;
+        this.authService = authService;
     }
 
     @PostMapping("/clients/register")
     @Operation(summary = "Register a new client")
     public ResponseEntity<?> register(@RequestBody RegRequest regRequest) {
-        if (regRequest.mail() == null || regRequest.password() == null) {
-            return new ResponseEntity<>("Required fields missing", HttpStatus.BAD_REQUEST);
+        try {
+            authService.register(regRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-        if (!regRequest.mail().matches(EMAIL_REGEX)) {
-            return new ResponseEntity<>("Invalid email format", HttpStatus.BAD_REQUEST);
-        }
-        clientService.register(regRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/auth/login")
     @Operation(summary = "Authenticate client and return JWT")
     public ResponseEntity<String> login(@RequestBody AuthRequest authRequest) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    authRequest.mail(), authRequest.password()));
-            UserDetails userDetails = clientDetailService.loadUserByUsername(authRequest.mail());
-            String token = jwtService.generateToken(userDetails);
+            String token = authService.login(authRequest);
             return ResponseEntity.ok(token);
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
@@ -68,14 +51,7 @@ public class ClientController {
     @Operation(summary = "Validate JWT token")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
         try {
-            if (!token.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token format");
-            }
-            String extractedToken = token.substring(7);
-            String username = jwtService.extractUsername(extractedToken);
-            UserDetails userDetails = clientDetailService.loadUserByUsername(username);
-
-            if (jwtService.isTokenValid(extractedToken, userDetails)) {
+            if (authService.validateToken(token)) {
                 return ResponseEntity.ok().build();
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");

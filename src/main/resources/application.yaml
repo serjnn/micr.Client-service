@@ -1,9 +1,9 @@
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/micr-synch
-    username: qwe
-    password: qwe
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/micr-synch}
+    username: ${DB_USERNAME:qwe}
+    password: ${DB_PASSWORD:qwe}
   flyway:
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
@@ -13,7 +13,8 @@ spring:
     name: client
 
 server:
-  port: 7015
+  port: ${SERVER_PORT:7015}
 
 variables:
-  SECRET_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  SECRET_KEY: ${JWT_SECRET_KEY:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}
+  ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:http://localhost:3000}
