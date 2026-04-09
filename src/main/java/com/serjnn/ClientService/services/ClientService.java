@@ -67,7 +67,6 @@ public class ClientService {
     }
 
     public void addBalance(Long clientID, BigDecimal balance) {
-        log.info("Adding balance {} to client id: {}", balance, clientID);
         clientRepository.updateBalance(clientID, balance);
     }
 
